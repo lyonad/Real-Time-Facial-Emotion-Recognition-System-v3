@@ -17,14 +17,16 @@ This project implements a deep learning-based emotion detection system that can 
 
 ## 📋 Requirements
 
-- Python 3.11+
-- TensorFlow 2.20.0+ (latest stable)
-- OpenCV 4.12.0+
-- NumPy 1.26.0+ (<2.2.0 for TensorFlow compatibility)
-- scikit-learn 1.6.0+ (<1.7.0)
-- Matplotlib 3.10.0+
-- Pillow 11.0.0+ (<12.0.0)
-- h5py 3.11.0+
+- **Python**: 3.11+ (3.11 or 3.12 recommended for best compatibility)
+- **TensorFlow**: 2.20.0+ (<2.21.0)
+- **OpenCV**: 4.12.0+ (<5.0.0)
+- **NumPy**: 1.26.0+ (<2.2.0 for TensorFlow compatibility)
+- **scikit-learn**: 1.6.0+ (<1.7.0)
+- **Matplotlib**: 3.10.0+ (<4.0.0)
+- **Pillow**: 11.0.0+ (<12.0.0)
+- **h5py**: 3.11.0+ (<4.0.0)
+
+All dependencies are specified in `requirements.txt` with version constraints for compatibility.
 
 ## 🚀 Installation
 
@@ -43,7 +45,7 @@ pip install -r requirements.txt
 
 ### Option 2: Using Conda
 
-1. Create a new conda environment:
+1. Create a new conda environment (Python 3.11 or 3.12 recommended):
 ```bash
 conda create -n emotion_detection python=3.11 -y
 conda activate emotion_detection
@@ -54,26 +56,28 @@ conda activate emotion_detection
 pip install -r requirements.txt
 ```
 
-3. **See `CONDA_USAGE.md` for detailed usage instructions**
-
 ## 📁 Project Structure
 
 ```
 Human Face Emotions/
-├── Data/                      # Training dataset
-│   ├── Angry/                # Angry emotion images
-│   ├── Fear/                 # Fear emotion images
-│   ├── Happy/                # Happy emotion images
-│   ├── Sad/                  # Sad emotion images
-│   └── Suprise/              # Surprise emotion images
-├── train_emotion_model.py    # Model training script
-├── real_time_emotion_detection.py  # Real-time detection script
-├── check_gpu.py              # GPU verification utility
-├── requirements.txt         # Python dependencies
-├── emotion_model.h5         # Trained model (generated after training)
-├── label_encoder.pkl        # Label encoder (generated after training)
-└── training_history.png     # Training history visualization
+├── Data/                              # Training dataset (ignored by git)
+│   ├── Angry/                        # Angry emotion images
+│   ├── Fear/                         # Fear emotion images
+│   ├── Happy/                        # Happy emotion images
+│   ├── Sad/                          # Sad emotion images
+│   └── Suprise/                      # Surprise emotion images
+├── train_emotion_model.py            # Model training script
+├── real_time_emotion_detection.py    # Real-time detection script
+├── requirements.txt                  # Python dependencies
+├── .gitignore                        # Git ignore file
+├── README.md                         # Project documentation
+│
+├── emotion_model.h5                  # Trained model (generated after training)
+├── label_encoder.pkl                 # Label encoder (generated after training)
+└── training_history.png              # Training history visualization
 ```
+
+**Note**: The `Data/` directory and `__pycache__/` are ignored by git (see `.gitignore`).
 
 ## 🎓 Model Architectures
 
@@ -122,15 +126,14 @@ After training, the script will generate:
 
 For faster training with GPU:
 
-1. Verify GPU availability:
-```bash
-python check_gpu.py
-```
+1. Verify GPU availability by checking TensorFlow output when running the training script. The script will automatically detect and report GPU availability.
 
-2. If GPU is available, increase batch size:
+2. If GPU is available, increase batch size in `train_emotion_model.py`:
 ```python
 BATCH_SIZE = 64  # or 128 for larger GPUs
 ```
+
+3. For GPU support on Windows, consider using Conda to install TensorFlow with CUDA support.
 
 ## 🎥 Real-time Detection
 
@@ -203,13 +206,12 @@ def create_model(architecture='v2', input_shape=(48, 48, 1), num_classes=5):
 
 ### Data Augmentation
 
-The training script includes automatic data augmentation:
-- Random rotation (±15 degrees)
-- Random horizontal flip
-- Random brightness adjustment
-- Random contrast adjustment
+The training script includes automatic data augmentation using TensorFlow Dataset API:
+- Random horizontal flip (50% chance)
+- Random brightness adjustment (max delta: 0.1)
+- Random contrast adjustment (0.9-1.1 range)
 
-Augmentation is applied automatically during training using TensorFlow Dataset API.
+Augmentation is applied automatically during training to improve model generalization.
 
 ### Model Evaluation
 
@@ -225,17 +227,17 @@ After training, the script automatically:
 
 If GPU is not detected:
 
-1. Check GPU availability:
-```bash
-python check_gpu.py
-```
+1. The training script will automatically check and report GPU availability when you run it.
 
 2. Verify CUDA installation:
 ```bash
 nvcc --version
 ```
 
-3. For Windows users, TensorFlow from PyPI may be CPU-only. Consider using Conda for GPU support.
+3. For Windows users, TensorFlow from PyPI may be CPU-only. Consider using Conda for GPU support:
+```bash
+conda install -c conda-forge tensorflow cudatoolkit=11.8 cudnn
+```
 
 ### Out of Memory Errors
 

@@ -2,13 +2,12 @@
 Real-time emotion detection using webcam
 """
 import warnings
-warnings.filterwarnings('ignore', category=UserWarning, module='keras')
-import cv2
+import os
+import pickle
 import numpy as np
+import cv2
 import tensorflow as tf
 import keras
-import pickle
-import os
 
 # Configuration
 IMG_SIZE = 48
@@ -26,8 +25,16 @@ EMOTION_COLORS = {
 }
 
 class EmotionDetector:
+    """Emotion detector class for real-time face emotion recognition."""
+    
     def __init__(self, model_path=MODEL_PATH, label_encoder_path=LABEL_ENCODER_PATH):
-        """Initialize the emotion detector"""
+        """
+        Initialize the emotion detector.
+        
+        Args:
+            model_path: Path to trained model file
+            label_encoder_path: Path to label encoder pickle file
+        """
         # Load model
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}. Please train the model first.")
@@ -59,7 +66,15 @@ class EmotionDetector:
             raise RuntimeError("Could not load face detection cascade. Please check OpenCV installation.")
     
     def preprocess_face(self, face_img):
-        """Preprocess face image for model input"""
+        """
+        Preprocess face image for model input.
+        
+        Args:
+            face_img: Face image (BGR or grayscale)
+        
+        Returns:
+            Preprocessed image tensor ready for model prediction
+        """
         # Convert to grayscale if needed
         if len(face_img.shape) == 3:
             face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
@@ -76,7 +91,17 @@ class EmotionDetector:
         return face_img
     
     def predict_emotion(self, face_img):
-        """Predict emotion from face image"""
+        """
+        Predict emotion from face image.
+        
+        Args:
+            face_img: Face image (BGR or grayscale)
+        
+        Returns:
+            emotion: Predicted emotion label
+            confidence: Prediction confidence (0-1)
+            all_predictions: Array of all class probabilities
+        """
         # Preprocess
         processed = self.preprocess_face(face_img)
         
@@ -93,7 +118,15 @@ class EmotionDetector:
         return emotion, confidence, predictions[0]
     
     def detect_faces(self, frame):
-        """Detect faces in frame"""
+        """
+        Detect faces in frame.
+        
+        Args:
+            frame: Input frame (BGR format)
+        
+        Returns:
+            List of face bounding boxes (x, y, w, h)
+        """
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(
             gray,
@@ -104,7 +137,16 @@ class EmotionDetector:
         return faces
     
     def draw_emotion_info(self, frame, x, y, w, h, emotion, confidence, all_predictions):
-        """Draw emotion information on frame"""
+        """
+        Draw emotion information on frame.
+        
+        Args:
+            frame: Frame to draw on
+            x, y, w, h: Face bounding box coordinates
+            emotion: Predicted emotion label
+            confidence: Prediction confidence
+            all_predictions: All class probabilities (unused but kept for API consistency)
+        """
         # Draw rectangle around face
         color = EMOTION_COLORS.get(emotion, (255, 255, 255))
         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
@@ -158,7 +200,11 @@ class EmotionDetector:
         )
 
 def main():
-    """Main function for real-time emotion detection"""
+    """
+    Main function for real-time emotion detection.
+    
+    Initializes detector, opens webcam, and runs real-time emotion detection loop.
+    """
     print("Initializing Emotion Detector...")
     try:
         detector = EmotionDetector()

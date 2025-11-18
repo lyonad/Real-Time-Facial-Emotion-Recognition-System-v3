@@ -2,22 +2,21 @@
 Training script for real-time emotion detection model
 """
 import warnings
-warnings.filterwarnings('ignore', category=UserWarning, module='keras')
 import os
+import pickle
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 import keras
-from keras import layers, models
-import matplotlib.pyplot as plt
 
 # Set random seeds for reproducibility
 np.random.seed(42)
 try:
     tf.random.set_seed(42)
-except:
+except AttributeError:
     pass
 
 # Configuration
@@ -28,14 +27,24 @@ DATA_DIR = "Data"
 MODEL_ARCHITECTURE = 'v2'  # Options: 'v1' (Basic), 'v2' (Enhanced - recommended), 'v3' (Residual), 'v4' (Efficient), 'v5' (Attention)
 
 # GPU Optimization (uncomment if using GPU)
-# import tensorflow as tf
 # tf.keras.mixed_precision.set_global_policy('mixed_float16')  # Faster training with GPU
 
 # Emotion classes (note: "Suprise" is spelled as in the directory)
 EMOTIONS = ['Angry', 'Fear', 'Happy', 'Sad', 'Suprise']
 
 def load_data(data_dir, img_size=IMG_SIZE):
-    """Load images and labels from directory structure"""
+    """
+    Load images and labels from directory structure.
+    
+    Args:
+        data_dir: Path to data directory containing emotion subdirectories
+        img_size: Target image size (default: IMG_SIZE)
+    
+    Returns:
+        images: Numpy array of preprocessed images
+        labels_encoded: Encoded labels as integers
+        label_encoder: LabelEncoder object for decoding predictions
+    """
     images = []
     labels = []
     
@@ -48,19 +57,20 @@ def load_data(data_dir, img_size=IMG_SIZE):
             
         emotion_files = []
         for ext in ['*.png', '*.jpg', '*.jpeg']:
-            emotion_files.extend([f for f in os.listdir(emotion_path) if f.lower().endswith(ext.replace('*', ''))])
+            emotion_files.extend([
+                f for f in os.listdir(emotion_path)
+                if f.lower().endswith(ext.replace('*', ''))
+            ])
         
         print(f"Loading {len(emotion_files)} images for {emotion}...")
         
         for filename in emotion_files:
             try:
                 img_path = os.path.join(emotion_path, filename)
-                img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Read as grayscale
+                img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
                 
                 if img is not None:
-                    # Resize image
                     img = cv2.resize(img, (img_size, img_size))
-                    # Normalize pixel values to [0, 1]
                     img = img.astype('float32') / 255.0
                     images.append(img)
                     labels.append(emotion)
@@ -89,7 +99,19 @@ def load_data(data_dir, img_size=IMG_SIZE):
     return images, labels_encoded, label_encoder
 
 def conv_block(x, filters, kernel_size=3, pool_size=2, dropout_rate=0.25):
-    """Convolutional block with batch normalization and dropout"""
+    """
+    Convolutional block with batch normalization and dropout.
+    
+    Args:
+        x: Input tensor
+        filters: Number of filters
+        kernel_size: Convolution kernel size
+        pool_size: Max pooling size
+        dropout_rate: Dropout rate
+    
+    Returns:
+        Output tensor
+    """
     x = layers.Conv2D(filters, kernel_size, padding='same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Activation('relu')(x)
@@ -98,7 +120,16 @@ def conv_block(x, filters, kernel_size=3, pool_size=2, dropout_rate=0.25):
     return x
 
 def create_model_v1_basic(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
-    """Basic CNN model (original architecture)"""
+    """
+    Basic CNN model (original architecture).
+    
+    Args:
+        input_shape: Shape of input images
+        num_classes: Number of emotion classes
+    
+    Returns:
+        Compiled Keras model
+    """
     inputs = layers.Input(shape=input_shape)
     
     x = conv_block(inputs, 32, dropout_rate=0.25)
@@ -119,7 +150,16 @@ def create_model_v1_basic(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
     return model
 
 def create_model_v2_enhanced(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
-    """Enhanced CNN with more filters and better regularization"""
+    """
+    Enhanced CNN with more filters and better regularization.
+    
+    Args:
+        input_shape: Shape of input images
+        num_classes: Number of emotion classes
+    
+    Returns:
+        Compiled Keras model
+    """
     inputs = layers.Input(shape=input_shape)
     
     # Initial convolution with larger kernel
@@ -150,7 +190,16 @@ def create_model_v2_enhanced(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5)
     return model
 
 def create_model_v3_residual(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
-    """Residual CNN with skip connections (ResNet-like)"""
+    """
+    Residual CNN with skip connections (ResNet-like).
+    
+    Args:
+        input_shape: Shape of input images
+        num_classes: Number of emotion classes
+    
+    Returns:
+        Compiled Keras model
+    """
     inputs = layers.Input(shape=input_shape)
     
     # Initial block
@@ -197,7 +246,16 @@ def create_model_v3_residual(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5)
     return model
 
 def create_model_v4_efficient(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
-    """Efficient CNN with depthwise separable convolutions (MobileNet-like)"""
+    """
+    Efficient CNN with depthwise separable convolutions (MobileNet-like).
+    
+    Args:
+        input_shape: Shape of input images
+        num_classes: Number of emotion classes
+    
+    Returns:
+        Compiled Keras model
+    """
     inputs = layers.Input(shape=input_shape)
     
     def depthwise_separable_conv(x, filters, stride=1):
@@ -239,7 +297,16 @@ def create_model_v4_efficient(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5
     return model
 
 def create_model_v5_attention(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5):
-    """CNN with attention mechanism for better feature focus"""
+    """
+    CNN with attention mechanism for better feature focus.
+    
+    Args:
+        input_shape: Shape of input images
+        num_classes: Number of emotion classes
+    
+    Returns:
+        Compiled Keras model
+    """
     inputs = layers.Input(shape=input_shape)
     
     # Convolutional feature extraction
@@ -307,7 +374,12 @@ def create_model(input_shape=(IMG_SIZE, IMG_SIZE, 1), num_classes=5, architectur
     return model
 
 def train_model():
-    """Main training function"""
+    """
+    Main training function.
+    
+    Loads data, creates model, trains with data augmentation,
+    and saves the trained model and label encoder.
+    """
     # Load data
     X, y, label_encoder = load_data(DATA_DIR)
     
@@ -321,16 +393,19 @@ def train_model():
     
     # Data augmentation function using TensorFlow operations
     def augment_image(image, label):
-        """Apply data augmentation to a single image"""
-        # Random horizontal flip (50% chance)
+        """
+        Apply data augmentation to a single image.
+        
+        Args:
+            image: Input image tensor
+            label: Image label
+        
+        Returns:
+            Augmented image and label
+        """
         image = tf.image.random_flip_left_right(image)
-        # Random brightness adjustment
         image = tf.image.random_brightness(image, max_delta=0.1)
-        # Random contrast adjustment
         image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
-        # Random translation (shift) - simulate with random crop and pad
-        # Note: For more complex augmentation, consider using tf.keras.layers.RandomTranslation
-        # Ensure values stay in [0, 1]
         image = tf.clip_by_value(image, 0.0, 1.0)
         return image, label
     
@@ -393,7 +468,6 @@ def train_model():
     )
     
     # Save label encoder
-    import pickle
     with open('label_encoder.pkl', 'wb') as f:
         pickle.dump(label_encoder, f)
     
@@ -441,7 +515,7 @@ if __name__ == "__main__":
     
     try:
         print(f"TensorFlow version: {tf.__version__}")
-    except:
+    except AttributeError:
         print("TensorFlow loaded")
     
     # Check GPU availability

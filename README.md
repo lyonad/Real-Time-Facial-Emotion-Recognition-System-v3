@@ -158,6 +158,17 @@ python real_time_emotion_detection.py
 
 ## 📊 Dataset
 
+### Dataset Source
+
+The dataset used in this project is from Kaggle:
+
+**Human Face Emotions Dataset**
+- **Source**: [Kaggle - Human Face Emotions](https://www.kaggle.com/datasets/samithsachidanandan/human-face-emotions)
+- **Author**: samithsachidanandan
+- **License**: Please check the dataset page for license information
+
+### Dataset Structure
+
 The dataset should be organized in the following structure:
 
 ```
@@ -264,6 +275,7 @@ Created for real-time emotion detection using deep learning.
 - TensorFlow/Keras for deep learning framework
 - OpenCV for computer vision utilities
 - scikit-learn for data preprocessing
+- [Human Face Emotions Dataset](https://www.kaggle.com/datasets/samithsachidanandan/human-face-emotions) by samithsachidanandan on Kaggle
 
 ---
 

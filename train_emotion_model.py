@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 import keras
+from keras import layers, models
 
 # Set random seeds for reproducibility
 np.random.seed(42)
